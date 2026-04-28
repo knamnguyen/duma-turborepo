@@ -10,7 +10,10 @@
     "start": "next start",
     "db:generate": "prisma generate",
     "db:push": "npx wrangler d1 execute session-db --remote --file=prisma/migration.sql",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "bun test",
+    "test:unit": "bun test tests/unit",
+    "test:integration": "bun test tests/integration"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.2.7",
@@ -42,6 +45,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260423.1",
+    "@happy-dom/global-registrator": "^20.9.0",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",

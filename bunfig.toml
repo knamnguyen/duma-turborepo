@@ -1,0 +1,4 @@
+[test]
+preload = ["./tests/helpers/setup.ts"]
+
+coverage = false
