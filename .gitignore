@@ -39,3 +39,25 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# local config with credentials
+context.md
+
+# local database
+local.db
+local.db-shm
+local.db-wal
+
+# cloudflare
+.wrangler/
+.open-next/
+
+# claude dev artifacts
+.claude/chrome-devtools/logs/
+.claude/chrome-devtools/screenshots/
+.claude/chrome-devtools/tmp/
+.claude/hooks/.logs/
+.claude/skills/chrome-devtools/screenshots/
+.claude/skills/chrome-devtools/tmp/

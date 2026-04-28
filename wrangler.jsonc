@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "session-buildstuffs",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat_v2"],
+  "workers_dev": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "session-db",
+      "database_id": "2ead8fb7-80d5-4721-be48-7a09e2e160f8"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "session-images"
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "session.buildstuffs.com/*",
+      "zone_name": "buildstuffs.com"
+    }
+  ]
+}
