@@ -1,0 +1,54 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  date        String
+  description String
+  createdAt   DateTime @default(now())
+  posts       Post[]
+}
+
+model Post {
+  id           String    @id @default(cuid())
+  sessionId    String
+  session      Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  authorName   String
+  authorAvatar String
+  content      String
+  imageUrls    String    @default("[]")
+  deviceId     String
+  createdAt    DateTime  @default(now())
+  comments     Comment[]
+
+  @@index([sessionId])
+  @@index([deviceId])
+}
+
+model Image {
+  id          String   @id @default(cuid())
+  data        String
+  contentType String
+  createdAt   DateTime @default(now())
+}
+
+model Comment {
+  id           String   @id @default(cuid())
+  postId       String
+  post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorName   String
+  authorAvatar String
+  content      String
+  deviceId     String
+  createdAt    DateTime @default(now())
+
+  @@index([postId])
+}
