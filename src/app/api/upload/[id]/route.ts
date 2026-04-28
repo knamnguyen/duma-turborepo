@@ -13,7 +13,12 @@ export async function GET(
 
   try {
     const r2 = getR2();
-    const object = await r2.get(`images/${id}`);
+
+    // Try images first, then videos
+    let object = await r2.get(`images/${id}`);
+    if (!object) {
+      object = await r2.get(`videos/${id}`);
+    }
 
     if (!object) {
       return new Response("Not found", { status: 404 });
