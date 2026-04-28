@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "scout-block": true,
+    "privacy-block": true,
+    "descriptive-name": true,
+    "post-edit-simplify-reminder": true,
+    "session-init": true,
+    "subagent-init": true
+  },
+  "paths": {
+    "plans": "process/plans",
+    "docs": "process/context",
+    "reports": "process/plans"
+  }
+}

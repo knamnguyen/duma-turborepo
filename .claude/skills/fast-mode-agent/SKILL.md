@@ -1,0 +1,1 @@
+../../agents/fast-mode-agent.md
