@@ -15,16 +15,20 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Calendar, Users, ArrowRight } from "lucide-react";
+import { Plus, Calendar, Users, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
 import { getDeviceIdentity } from "@/lib/device";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { FormBuilder } from "@/components/form-builder";
+import { DEFAULT_FORM_SCHEMA, type FormField } from "@/lib/form-schema";
 
 export default function HomePage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
+  const [formSchema, setFormSchema] = useState<FormField[]>(DEFAULT_FORM_SCHEMA);
+  const [showFormBuilder, setShowFormBuilder] = useState(false);
 
   const { isSignedIn, user } = useUser();
   const trpc = useTRPC();
@@ -40,6 +44,8 @@ export default function HomePage() {
         setName("");
         setDate("");
         setDescription("");
+        setFormSchema(DEFAULT_FORM_SCHEMA);
+        setShowFormBuilder(false);
       },
     })
   );
@@ -89,7 +95,7 @@ export default function HomePage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   const creatorDeviceId = getDeviceIdentity().deviceId;
-                  createMutation.mutate({ name, date, description, creatorDeviceId, creatorUserId: user?.id });
+                  createMutation.mutate({ name, date, description, creatorDeviceId, creatorUserId: user?.id, formSchema });
                 }}
                 className="space-y-4 mt-2"
               >
@@ -123,6 +129,23 @@ export default function HomePage() {
                     maxLength={500}
                   />
                 </div>
+                {/* Form builder toggle */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFormBuilder(!showFormBuilder)}
+                    className="flex items-center gap-2 text-sm text-white/50 hover:text-white/70 transition-colors"
+                  >
+                    {showFormBuilder ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    Customize onboarding form
+                  </button>
+                  {showFormBuilder && (
+                    <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                      <FormBuilder value={formSchema} onChange={setFormSchema} />
+                    </div>
+                  )}
+                </div>
+
                 {createMutation.error && (
                   <p className="text-red-400 text-sm">
                     {createMutation.error.message}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { router, publicProcedure } from "../trpc";
 import { slugify } from "@/lib/utils";
+import { formSchemaValidator, DEFAULT_FORM_SCHEMA } from "@/lib/form-schema";
 
 function cuid() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -15,12 +16,14 @@ export const sessionRouter = router({
         description: z.string().max(500),
         creatorDeviceId: z.string().min(1),
         creatorUserId: z.string().optional(),
+        formSchema: formSchemaValidator.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const slug = slugify(input.name);
       const id = cuid();
       const creatorUserId = input.creatorUserId || ctx.userId || null;
+      const formSchema = input.formSchema || DEFAULT_FORM_SCHEMA;
 
       if (!slug) {
         throw new Error("Session name must produce a valid URL slug");
@@ -51,7 +54,7 @@ export const sessionRouter = router({
 
       await ctx.db
         .prepare(
-          'INSERT INTO "Session" (id, name, slug, date, description, "creatorDeviceId", "creatorUserId", createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO "Session" (id, name, slug, date, description, "creatorDeviceId", "creatorUserId", "formSchema", createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .bind(
           id,
@@ -61,11 +64,12 @@ export const sessionRouter = router({
           input.description,
           input.creatorDeviceId,
           creatorUserId,
+          JSON.stringify(formSchema),
           new Date().toISOString()
         )
         .run();
 
-      return { id, name: input.name, slug, date: input.date, description: input.description };
+      return { id, name: input.name, slug, date: input.date, description: input.description, formSchema };
     }),
 
   update: publicProcedure
@@ -78,6 +82,8 @@ export const sessionRouter = router({
         name: z.string().min(1).max(100).optional(),
         description: z.string().max(500).optional(),
         date: z.string().min(1).optional(),
+        formSchema: formSchemaValidator.optional(),
+        youtubePlaylistUrl: z.string().max(500).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -125,6 +131,16 @@ export const sessionRouter = router({
       if (input.date !== undefined) {
         updates.push('"date" = ?');
         values.push(input.date);
+      }
+
+      if (input.formSchema !== undefined) {
+        updates.push('"formSchema" = ?');
+        values.push(JSON.stringify(input.formSchema));
+      }
+
+      if (input.youtubePlaylistUrl !== undefined) {
+        updates.push('"youtubePlaylistUrl" = ?');
+        values.push(input.youtubePlaylistUrl || null);
       }
 
       // Handle slug change
@@ -242,6 +258,8 @@ export const sessionRouter = router({
           description: string;
           creatorDeviceId: string | null;
           creatorUserId: string | null;
+          formSchema: string | null;
+          youtubePlaylistUrl: string | null;
           createdAt: string;
         }>();
 
@@ -249,7 +267,25 @@ export const sessionRouter = router({
         throw new Error("Session not found");
       }
 
-      return session;
+      return {
+        ...session,
+        formSchema: session.formSchema ? JSON.parse(session.formSchema) as import("@/lib/form-schema").FormField[] : DEFAULT_FORM_SCHEMA,
+      };
+    }),
+
+  getFormSchema: publicProcedure
+    .input(z.object({ sessionId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const row = await ctx.db
+        .prepare('SELECT "formSchema" FROM "Session" WHERE id = ?')
+        .bind(input.sessionId)
+        .first<{ formSchema: string | null }>();
+
+      if (!row) {
+        throw new Error("Session not found");
+      }
+
+      return row.formSchema ? JSON.parse(row.formSchema) as import("@/lib/form-schema").FormField[] : DEFAULT_FORM_SCHEMA;
     }),
 
   resolveSlug: publicProcedure

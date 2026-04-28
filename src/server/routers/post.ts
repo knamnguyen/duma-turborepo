@@ -20,6 +20,7 @@ interface PostRow {
   email: string | null;
   userId: string | null;
   verified: number;
+  fieldResponses: string | null;
   createdAt: string;
   commentCount: number;
 }
@@ -28,14 +29,15 @@ const postInput = z.object({
   sessionId: z.string(),
   authorName: z.string().min(1).max(50),
   authorAvatar: z.string(),
-  content: z.string().min(1).max(1000),
+  content: z.string().max(1000).default(""),
   imageUrls: z.array(z.string()).default([]),
   deviceId: z.string().optional().default(""),
   userId: z.string().optional(),
-  productLink: z.string().min(1),
-  contactInfo: z.string().min(1),
-  demoIntention: z.enum(["yes", "no", "later"]),
+  productLink: z.string().default(""),
+  contactInfo: z.string().default(""),
+  demoIntention: z.enum(["yes", "no", "later", ""]).default(""),
   email: z.string().email().max(254).transform((v) => v.trim().toLowerCase()),
+  fieldResponses: z.string().default("{}"),
 });
 
 export const postRouter = router({
@@ -54,7 +56,7 @@ export const postRouter = router({
     try {
       await ctx.db
         .prepare(
-          'INSERT INTO "Post" (id, sessionId, authorName, authorAvatar, content, imageUrls, deviceId, productLink, contactInfo, demoIntention, email, userId, verified, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+          'INSERT INTO "Post" (id, sessionId, authorName, authorAvatar, content, imageUrls, deviceId, productLink, contactInfo, demoIntention, email, userId, verified, "fieldResponses", createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         .bind(
           id,
@@ -70,6 +72,7 @@ export const postRouter = router({
           input.email,
           userId,
           verified,
+          input.fieldResponses,
           new Date().toISOString()
         )
         .run();
@@ -145,11 +148,12 @@ export const postRouter = router({
         userId: z.string().optional(),
         authorName: z.string().min(1).max(50).optional(),
         authorAvatar: z.string().optional(),
-        content: z.string().min(1).max(1000).optional(),
+        content: z.string().max(1000).optional(),
         imageUrls: z.array(z.string()).optional(),
         productLink: z.string().optional(),
         contactInfo: z.string().optional(),
         demoIntention: z.enum(["yes", "no", "later", ""]).optional(),
+        fieldResponses: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -174,6 +178,7 @@ export const postRouter = router({
       if (input.productLink !== undefined) { sets.push('"productLink" = ?'); values.push(input.productLink); }
       if (input.contactInfo !== undefined) { sets.push('"contactInfo" = ?'); values.push(input.contactInfo); }
       if (input.demoIntention !== undefined) { sets.push('"demoIntention" = ?'); values.push(input.demoIntention); }
+      if (input.fieldResponses !== undefined) { sets.push('"fieldResponses" = ?'); values.push(input.fieldResponses); }
 
       if (sets.length === 0) return { id: input.id };
 
@@ -200,6 +205,7 @@ export const postRouter = router({
       return posts.results.map((post) => ({
         ...post,
         imageUrls: JSON.parse(post.imageUrls) as string[],
+        fieldResponses: post.fieldResponses || "{}",
         _count: { comments: post.commentCount },
       }));
     }),
@@ -218,6 +224,7 @@ export const postRouter = router({
       return {
         ...post,
         imageUrls: JSON.parse(post.imageUrls) as string[],
+        fieldResponses: post.fieldResponses || "{}",
       };
     }),
 
